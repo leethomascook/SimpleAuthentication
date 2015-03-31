@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using SimpleAuthentication.Core.Config;
 using SimpleAuthentication.Core.Tracing;
+using StructureMap;
+using StructureMap.Query;
 
 namespace SimpleAuthentication.Core
 {
@@ -56,7 +58,11 @@ namespace SimpleAuthentication.Core
         {
             authenticationProviders.ThrowIfNull("authenticationProviders");
 
-            var discoveredProviders = ReflectionHelpers.FindAllTypesOf<IAuthenticationProvider>();
+            IContainer container = ObjectFactory.Container;
+            IEnumerable<InstanceRef> instances = container.Model.AllInstances.
+              Where(i => i.PluginType.Equals(typeof(IAuthenticationProvider)));
+
+            var discoveredProviders = instances.Select(x => x.ReturnedType).ToList();
             if (discoveredProviders == null)
             {
                 return;
